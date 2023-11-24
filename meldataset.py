@@ -142,6 +142,7 @@ class MelDataset(torch.utils.data.Dataset):
                                   center=False)
         else:
             mel_filename = 'mel_spec-' + os.path.split(filename)[-1].split('-', maxsplit=1)[-1]
+            mel_filename = os.path.splitext(mel_filename)[0] + '.pt'
             mel = torch.load(os.path.join(self.base_mels_path, mel_filename))
 
             if len(mel.shape) < 3:

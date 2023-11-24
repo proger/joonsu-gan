@@ -4,7 +4,7 @@ import random
 import torch
 import torch.utils.data
 import numpy as np
-from librosa.util import normalize
+#from librosa.util import normalize
 from scipy.io.wavfile import read
 from librosa.filters import mel as librosa_mel_fn
 
@@ -73,19 +73,20 @@ def mel_spectrogram(y, n_fft, num_mels, sampling_rate, hop_size, win_size, fmin,
 
 
 def get_dataset_filelist(a):
-    with open(a.input_training_file, 'r', encoding='utf-8') as fi:
-        training_files = [os.path.join(a.input_wavs_dir, x.split('|')[0] + '.wav')
-                          for x in fi.read().split('\n') if len(x) > 0]
+    all_files = [os.path.join(a.input_wavs_dir, x) for x in os.listdir(a.input_wavs_dir) if x.endswith('.wav')]
 
-    with open(a.input_validation_file, 'r', encoding='utf-8') as fi:
-        validation_files = [os.path.join(a.input_wavs_dir, x.split('|')[0] + '.wav')
-                            for x in fi.read().split('\n') if len(x) > 0]
+    import numpy as np
+    np.random.default_rng(1337).shuffle(all_files)
+
+    training_files = all_files[:int(len(all_files) * 0.9)]
+    validation_files = all_files[int(len(all_files) * 0.9):]
+
     return training_files, validation_files
 
 
 class MelDataset(torch.utils.data.Dataset):
     def __init__(self, training_files, segment_size, n_fft, num_mels,
-                 hop_size, win_size, sampling_rate,  fmin, fmax, split=True, shuffle=True, n_cache_reuse=1,
+                 hop_size, win_size, sampling_rate,  fmin, fmax, split=False, shuffle=True, n_cache_reuse=1,
                  device=None, fmax_loss=None, fine_tuning=False, base_mels_path=None):
         self.audio_files = training_files
         random.seed(1234)
@@ -140,9 +141,8 @@ class MelDataset(torch.utils.data.Dataset):
                                   self.sampling_rate, self.hop_size, self.win_size, self.fmin, self.fmax,
                                   center=False)
         else:
-            mel = np.load(
-                os.path.join(self.base_mels_path, os.path.splitext(os.path.split(filename)[-1])[0] + '.npy'))
-            mel = torch.from_numpy(mel)
+            mel_filename = 'mel_spec-' + os.path.split(filename)[-1].split('-', maxsplit=1)[-1]
+            mel = torch.load(os.path.join(self.base_mels_path, mel_filename))
 
             if len(mel.shape) < 3:
                 mel = mel.unsqueeze(0)

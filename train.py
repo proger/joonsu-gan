@@ -230,7 +230,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--group_name', default=None)
-    parser.add_argument('--input_wavs_dir', default='dataset/16k/audio')
+    parser.add_argument('--input_wavs_dir', default='dataset/16k/22k')
     parser.add_argument('--input_mels_dir', default='dataset/16k/specs')
     parser.add_argument('--checkpoint_path', default='exp')
     parser.add_argument('--config', default='config_v3.json')

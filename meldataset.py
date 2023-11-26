@@ -62,7 +62,7 @@ def mel_spectrogram(y, n_fft, num_mels, sampling_rate, hop_size, win_size, fmin,
     y = y.squeeze(1)
 
     spec = torch.stft(y, n_fft, hop_length=hop_size, win_length=win_size, window=hann_window[str(y.device)],
-                      center=center, pad_mode='reflect', normalized=False, onesided=True)
+                      center=center, pad_mode='reflect', normalized=False, onesided=True, return_complex=False)
 
     spec = torch.sqrt(spec.pow(2).sum(-1)+(1e-9))
 
@@ -126,6 +126,7 @@ class MelDataset(torch.utils.data.Dataset):
             self._cache_ref_count -= 1
 
         audio = torch.FloatTensor(audio)
+        audio = audio[-16384:]
         audio = audio.unsqueeze(0)
 
         if not self.fine_tuning:
@@ -144,6 +145,7 @@ class MelDataset(torch.utils.data.Dataset):
             mel_filename = 'mel_spec-' + os.path.split(filename)[-1].split('-', maxsplit=1)[-1]
             mel_filename = os.path.splitext(mel_filename)[0] + '.pt'
             mel = torch.load(os.path.join(self.base_mels_path, mel_filename))
+            mel = mel[:,:,3:]
 
             if len(mel.shape) < 3:
                 mel = mel.unsqueeze(0)
